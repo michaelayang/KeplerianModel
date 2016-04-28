@@ -3,26 +3,75 @@
 #include <stdio.h>
 
 
-#define INCREMENT_SAMPLE_ANGLE PI/720.0; // quarter of a degree
+#define INCREMENT_SAMPLE_ANGLE     ((PI/180.0)/100.0) // 1/100 of a degree
 
 
 KeplerianEllipse::KeplerianEllipse(const double a,
                                    const double b,
                                    const double initialTheta,
-                                   const double stepArea)
+                                   const double referenceRadius,
+                                   const double numStepsReciprocalSeed)
 {
   m_ellipseA         = a;
   m_ellipseB         = b;
   m_ellipseC         = sqrt(pow(a, 2.0) - pow(b, 2.0));
   m_eccentricity     = m_ellipseC/m_ellipseA;
-  m_directrix        = (m_ellipseA/m_eccentricity)-m_ellipseC;
+
+  if (m_eccentricity != 0)
+  {
+    m_directrix      = (m_ellipseA/m_eccentricity)-m_ellipseC;
+  }
+  else
+  {
+    m_directrix      = m_ellipseA;
+  }
 
   m_polarCoordTheta  = initialTheta;
 
   m_polarCoordRadius = getDerivedRadiusFromTheta(m_polarCoordTheta);
 
-  m_stepArea         = stepArea;
+  double tmp_theta                    = 0.0;
+  double radius_sum                   = 0.0;
+  int    radius_count                 = 0;
+  double step_area_3rd_law_multiplier = 0.0;
+  double average_polar_coord_radius   = 0.0;
+
+  while (tmp_theta < 2.0*PI)
+  {
+    tmp_theta += INCREMENT_SAMPLE_ANGLE;
+    radius_sum += getDerivedRadiusFromTheta(tmp_theta);
+    radius_count++;
+  }
+
+  average_polar_coord_radius = radius_sum / (double) radius_count;
+
+  step_area_3rd_law_multiplier = sqrt(pow(average_polar_coord_radius/referenceRadius, 3.0));
+
+  //
+  // From "Calculus With Analytic Geometry" by George F. Simmons
+  // Copyright 1985
+  // Problem 5 in section 15.3 for chapter "Ellipses," which points out
+  // how the area of an ellipse is related to the area of a circle
+  // by the factor b/a, when the circle equation is x^2 + y^2 = a^2 and
+  // the ellipse equation is x^2/a^2 + y^2/b^2 = 1.  It works out when
+  // you do the algebra; very interesting!
+  //
+  double area_of_circle_with_radius_a = PI*a*a;
+  double area_of_ellipse              = area_of_circle_with_radius_a*b/a;
+
+  m_stepArea = numStepsReciprocalSeed;
  
+  m_stepArea *= area_of_ellipse; // Normalize area-per-step-to-sweep,
+                                 // so that number of sweep steps will be
+                                 // the same for all ellipses.
+  m_stepArea /= step_area_3rd_law_multiplier; // Now de-normalize the area-per-
+                                              // step-to-sweep, per Kepler's
+                                              // 3rd law which states
+                                              // that T^2 is linearly
+                                              // proportioal to r^3, where
+                                              // r is the average radius
+                                              // of the ellipse.
+
 }// KeplerianEllipse constructor
 
 
@@ -101,10 +150,17 @@ double KeplerianEllipse::getDerivedRadiusFromTheta(double theta)
   //
   // From "Calculus With Analytic Geometry" by George F. Simmons
   // Copyright 1985
-  // Section 16.3 "Polar Equations of Circles, Conics, and Spirals
+  // Section 16.3 "Polar Equations of Circles, Conics, and Spirals"
   //
 
-  ret_val = (m_eccentricity*m_directrix)/(1-m_eccentricity*cos(theta));
+  if (m_eccentricity != 0)
+  {
+    ret_val = (m_eccentricity*m_directrix)/(1-m_eccentricity*cos(theta));
+  }
+  else
+  {
+    ret_val = m_ellipseA;
+  }
 
   return ret_val;
 

@@ -13,7 +13,16 @@ class KeplerianEllipse
     // All angles are in radians.
     //
 
-    KeplerianEllipse(const double a, const double b, const double initialTheta, const double stepArea);
+    //
+    // For the following...
+    //
+    // For example, to create a model that moves approximately a day per step
+    // using realistic Earth parameters, set _a_ to the semi-major-axis length
+    // of the Earth, set _b_ to sqrt(a^2-c^2) where _c_ is the Earth orbit's
+    // eccentricity/a, set referenceRadius to the same as _a_,
+    // and set the numStepsReciprocalSeed to 1.0/365.25.
+    //
+    KeplerianEllipse(const double a, const double b, const double initialTheta, const double referenceRadius, const double numStepsReciprocalSeed);
 
     virtual ~KeplerianEllipse();
 
