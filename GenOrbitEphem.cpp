@@ -59,17 +59,10 @@ main()
 #else
 
   KeplerianEllipse earth_propagator(g_earth.semi_major_axis_meters,
-                                    g_earth.semi_minor_axis_meters,
-                                    0, // initial angle
-                                    1.0/365.25 // "step area reciprocal seed"
-                                   );
+                                    g_earth.semi_minor_axis_meters);
 
   KeplerianEllipse mars_propagator(g_mars.semi_major_axis_meters,
-                                   g_mars.semi_minor_axis_meters,
-                                   0, // initial angle
-                                   1.0/365.25, // "step area reciprocal seed"
-                                   earth_propagator.getAverageRadius()
-                                  );
+                                   g_mars.semi_minor_axis_meters);
 
 #endif
 

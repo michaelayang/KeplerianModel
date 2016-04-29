@@ -22,7 +22,14 @@ class KeplerianEllipse
     // eccentricity/a, set referenceRadius to the same as _a_,
     // and set the numStepsReciprocalSeed to 1.0/365.25.
     //
-    KeplerianEllipse(const double a, const double b, const double initialTheta, const double numStepsReciprocalSeed, const double referenceRadius = 0);
+    KeplerianEllipse(const double a,
+                     const double b,
+                     const double initialTheta = 0,
+                     const double numStepsReciprocalSeed = 1/365.256363004,
+                       // one Earth day as fraction of one earth year is default
+                     const double referenceRadius = 149598023000.0
+                       // average Earth orbital radius in meters
+                    );
 
     virtual ~KeplerianEllipse();
 
