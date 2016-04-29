@@ -9,8 +9,8 @@
 KeplerianEllipse::KeplerianEllipse(const double a,
                                    const double b,
                                    const double initialTheta,
-                                   const double referenceRadius,
-                                   const double numStepsReciprocalSeed)
+                                   const double numStepsReciprocalSeed,
+                                   const double referenceRadius)
 {
   m_ellipseA         = a;
   m_ellipseB         = b;
@@ -34,7 +34,6 @@ KeplerianEllipse::KeplerianEllipse(const double a,
   double radius_sum                   = 0.0;
   int    radius_count                 = 0;
   double step_area_3rd_law_multiplier = 0.0;
-  double average_polar_coord_radius   = 0.0;
 
   while (tmp_theta < 2.0*PI)
   {
@@ -43,9 +42,16 @@ KeplerianEllipse::KeplerianEllipse(const double a,
     radius_count++;
   }
 
-  average_polar_coord_radius = radius_sum / (double) radius_count;
+  m_polarCoordAverageRadius = radius_sum / (double) radius_count;
 
-  step_area_3rd_law_multiplier = sqrt(pow(average_polar_coord_radius/referenceRadius, 3.0));
+  if (referenceRadius != 0)
+  {
+    step_area_3rd_law_multiplier = sqrt(pow(m_polarCoordAverageRadius/referenceRadius, 3.0));
+  }
+  else
+  {
+    step_area_3rd_law_multiplier = 1;
+  }
 
   //
   // From "Calculus With Analytic Geometry" by George F. Simmons
@@ -59,18 +65,22 @@ KeplerianEllipse::KeplerianEllipse(const double a,
   double area_of_circle_with_radius_a = PI*a*a;
   double area_of_ellipse              = area_of_circle_with_radius_a*b/a;
 
-  m_stepArea = numStepsReciprocalSeed;
+  m_sweepArea = numStepsReciprocalSeed;
  
-  m_stepArea *= area_of_ellipse; // Normalize area-per-step-to-sweep,
+  m_sweepArea *= area_of_ellipse; // Normalize area-per-step-to-sweep,
                                  // so that number of sweep steps will be
                                  // the same for all ellipses.
-  m_stepArea /= step_area_3rd_law_multiplier; // Now de-normalize the area-per-
+ 
+  m_sweepArea /= step_area_3rd_law_multiplier; // Now de-normalize the area-per-
                                               // step-to-sweep, per Kepler's
                                               // 3rd law which states
                                               // that T^2 is linearly
                                               // proportioal to r^3, where
                                               // r is the average radius
                                               // of the ellipse.
+
+  m_sweepCount  = 1;
+  m_accruedArea = 0.0;
 
 }// KeplerianEllipse constructor
 
@@ -84,14 +94,15 @@ void KeplerianEllipse::init(double theta)
 {
   m_polarCoordTheta  = theta;
   m_polarCoordRadius = getDerivedRadiusFromTheta(theta);
+  m_sweepCount       = 1;
+  m_accruedArea      = 0.0;
 
 }// init()
 
 
 void KeplerianEllipse::step()
 {
-  int    angle_steps = 0;
-  double accruedArea = 0.0;
+  double step_area   = 0.0;
   double old_radius  = m_polarCoordRadius;
   double old_theta   = m_polarCoordTheta;
   double radius0     = m_polarCoordRadius;
@@ -99,11 +110,11 @@ void KeplerianEllipse::step()
   double theta0      = m_polarCoordTheta;
   double theta1      = m_polarCoordTheta;
 
-  while (accruedArea < m_stepArea)
+  while (m_accruedArea + step_area < m_sweepArea*m_sweepCount)
   {
     theta1 += INCREMENT_SAMPLE_ANGLE;
     radius1 = getDerivedRadiusFromTheta(theta1);
-    accruedArea = findArea(radius0, radius1, theta1-theta0);
+    step_area = findArea(radius0, radius1, theta1-theta0);
 #ifdef DEBUG
     fprintf(stderr, "%f,%f\n", theta1, accruedArea);
 #endif
@@ -112,7 +123,17 @@ void KeplerianEllipse::step()
   m_polarCoordRadius = radius1;
   m_polarCoordTheta  = theta1;
 
+  m_sweepCount++;
+  m_accruedArea += step_area;
+
 }// step()
+
+
+const double KeplerianEllipse::getAverageRadius()
+{
+  return m_polarCoordAverageRadius;
+
+}// getAverageRadius()
 
 
 const double KeplerianEllipse::getX()

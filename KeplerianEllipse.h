@@ -22,13 +22,15 @@ class KeplerianEllipse
     // eccentricity/a, set referenceRadius to the same as _a_,
     // and set the numStepsReciprocalSeed to 1.0/365.25.
     //
-    KeplerianEllipse(const double a, const double b, const double initialTheta, const double referenceRadius, const double numStepsReciprocalSeed);
+    KeplerianEllipse(const double a, const double b, const double initialTheta, const double numStepsReciprocalSeed, const double referenceRadius = 0);
 
     virtual ~KeplerianEllipse();
 
     void init(double theta);
 
     void step();
+
+    const double getAverageRadius();
 
     const double getX();
     const double getY();
@@ -52,7 +54,11 @@ class KeplerianEllipse
 
     double m_polarCoordTheta;
     double m_polarCoordRadius;
-    double m_stepArea;
+    double m_sweepArea;
+    double m_polarCoordAverageRadius;
+
+    int    m_sweepCount;
+    double m_accruedArea;
 
 };
 
