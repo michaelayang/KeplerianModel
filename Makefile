@@ -3,8 +3,15 @@ LIBS = -lm
 
 all:  GenOrbitEphem
 
-GenOrbitEphem:  GenOrbitEphem.o KeplerianEllipse.o
-	$(CXX) -o $@ GenOrbitEphem.o KeplerianEllipse.o $(LIBS)
+SRCS = GenOrbitEphem.cpp \
+       KeplerianEllipse.cpp \
+       EarthKeplerianEllipse.cpp \
+       MarsKeplerianEllipse.cpp
+
+OBJS = $(SRCS:.cpp=.o)
+
+GenOrbitEphem:  $(OBJS)
+	$(CXX) -o $@ $(OBJS) $(LIBS)
 
 %.o:  %.c
 	$(CXX) -c $<
