@@ -1,21 +1,39 @@
 #include "KeplerianEllipse.h"
+#include "SemiMajorAxisInvalidException.h"
+#include "EccentricityInvalidException.h"
 #include <math.h>
 #include <stdio.h>
 
 
-#define INCREMENT_SAMPLE_ANGLE     ((PI/180.0)/100.0) // 1/100 of a degree
+#define INCREMENT_SAMPLE_ANGLE     ((PI/180.0)/1.0) // a degree
 
 
-KeplerianEllipse::KeplerianEllipse(const double a,
-                                   const double b,
+KeplerianEllipse::KeplerianEllipse(const double semiMajorAxisLength,
+                                   const double eccentricity,
                                    const double initialTheta,
                                    const double numStepsReciprocalSeed,
-                                   const double referenceRadius)
+                                   const double referenceRadius) :
+  m_ellipseA(semiMajorAxisLength),
+  m_eccentricity(eccentricity),
+  m_polarCoordTheta(initialTheta)
 {
-  m_ellipseA         = a;
-  m_ellipseB         = b;
-  m_ellipseC         = sqrt(pow(a, 2.0) - pow(b, 2.0));
-  m_eccentricity     = m_ellipseC/m_ellipseA;
+  if (semiMajorAxisLength > 0)
+  {
+    m_ellipseC = eccentricity*semiMajorAxisLength;
+  }
+  else
+  {
+    throw new SemiMajorAxisInvalidException;
+  }
+
+  if (m_ellipseA > m_ellipseC)
+  {
+    m_ellipseB = sqrt(pow(m_ellipseA, 2.0) - pow(m_ellipseC, 2.0));
+  }
+  else
+  {
+    throw new EccentricityInvalidException;
+  }
 
   if (m_eccentricity != 0)
   {
@@ -25,8 +43,6 @@ KeplerianEllipse::KeplerianEllipse(const double a,
   {
     m_directrix      = m_ellipseA;
   }
-
-  m_polarCoordTheta  = initialTheta;
 
   m_polarCoordRadius = getDerivedRadiusFromTheta(m_polarCoordTheta);
 
@@ -62,8 +78,8 @@ KeplerianEllipse::KeplerianEllipse(const double a,
   // the ellipse equation is x^2/a^2 + y^2/b^2 = 1.  It works out when
   // you do the algebra; very interesting!
   //
-  double area_of_circle_with_radius_a = PI*a*a;
-  double area_of_ellipse              = area_of_circle_with_radius_a*b/a;
+  double area_of_circle_with_radius_a = PI*m_ellipseA*m_ellipseA;
+  double area_of_ellipse              = area_of_circle_with_radius_a*m_ellipseB/m_ellipseA;
 
   m_sweepArea = numStepsReciprocalSeed;
  
@@ -103,8 +119,6 @@ void KeplerianEllipse::init(double theta)
 void KeplerianEllipse::step()
 {
   double step_area   = 0.0;
-  double old_radius  = m_polarCoordRadius;
-  double old_theta   = m_polarCoordTheta;
   double radius0     = m_polarCoordRadius;
   double radius1     = m_polarCoordRadius;
   double theta0      = m_polarCoordTheta;

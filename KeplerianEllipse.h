@@ -1,7 +1,7 @@
 #ifndef KEPLERIAN_ELLIPSE_H
 #define KEPLERIAN_ELLIPSE_H
 
-#define PI 3.1416
+#define PI 3.14159265358979323846
 
 class KeplerianEllipse
 {
@@ -16,18 +16,19 @@ class KeplerianEllipse
     //
     // For the following...
     //
-    // For example, to create a model that moves approximately a day per step
-    // using realistic Earth parameters, set _a_ to the semi-major-axis length
-    // of the Earth, set _b_ to sqrt(a^2-c^2) where _c_ is the Earth orbit's
-    // eccentricity/a, set referenceRadius to the same as _a_,
-    // and set the numStepsReciprocalSeed to 1.0/365.25.
+    // semiMajorAxisLength and eccentricity should be googleable on 
+    // Wikipedia, e.g. for Mars and Earth.  Just plug them in from those
+    // figures.  Use meters as length units.
     //
-    KeplerianEllipse(const double semiMajorAxisLength, // "a"
-                     const double semiMinorAxisLength, // "b"
+    // Typically, leave the other params as their default values.
+    //
+
+    KeplerianEllipse(const double semiMajorAxisLength, // "a" ... in meters
+                     const double eccentricity,        // b=sqrt(a^2-c^2),c=e*a
                      const double initialTheta = 0,    // in radians
                      const double numStepsReciprocalSeed = 1/365.256363004,
                        // one Earth day as fraction of one earth year is default
-                     const double referenceRadius = 149598023000.0
+                     const double referenceRadius = 149577845178.948517
                        // average Earth orbital radius in meters
                     );
 
