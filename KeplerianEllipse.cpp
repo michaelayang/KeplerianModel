@@ -1,11 +1,15 @@
 #include "KeplerianEllipse.h"
 #include "SemiMajorAxisInvalidException.h"
 #include "EccentricityInvalidException.h"
+#include "DivideByZeroException.h"
+#include "GeneralException.h"
 #include <math.h>
 #include <stdio.h>
 
 
-#define INCREMENT_SAMPLE_ANGLE     ((PI/180.0)/1.0) // a degree
+#define MAX_STR                    512
+
+#define INCREMENT_SAMPLE_ANGLE     ((PI/180.0)/100.0) // 1/100 a degree
 
 
 KeplerianEllipse::KeplerianEllipse(const double semiMajorAxisLength,
@@ -46,29 +50,6 @@ KeplerianEllipse::KeplerianEllipse(const double semiMajorAxisLength,
 
   m_polarCoordRadius = getDerivedRadiusFromTheta(m_polarCoordTheta);
 
-  double tmp_theta                    = 0.0;
-  double radius_sum                   = 0.0;
-  int    radius_count                 = 0;
-  double step_area_3rd_law_multiplier = 0.0;
-
-  while (tmp_theta < 2.0*PI)
-  {
-    tmp_theta += INCREMENT_SAMPLE_ANGLE;
-    radius_sum += getDerivedRadiusFromTheta(tmp_theta);
-    radius_count++;
-  }
-
-  m_polarCoordAverageRadius = radius_sum / (double) radius_count;
-
-  if (referenceRadius != 0)
-  {
-    step_area_3rd_law_multiplier = sqrt(pow(m_polarCoordAverageRadius/referenceRadius, 3.0));
-  }
-  else
-  {
-    step_area_3rd_law_multiplier = 1;
-  }
-
   //
   // From "Calculus With Analytic Geometry" by George F. Simmons
   // Copyright 1985
@@ -79,11 +60,29 @@ KeplerianEllipse::KeplerianEllipse(const double semiMajorAxisLength,
   // you do the algebra; very interesting!
   //
   double area_of_circle_with_radius_a = PI*m_ellipseA*m_ellipseA;
-  double area_of_ellipse              = area_of_circle_with_radius_a*m_ellipseB/m_ellipseA;
+
+  m_areaOfEllipse = area_of_circle_with_radius_a*m_ellipseB/m_ellipseA;
+
+  m_polarCoordAverageRadius = sqrt(m_areaOfEllipse/PI);
+
+#ifdef DEBUG
+  printf("polar coord average radius is %lf\n", m_polarCoordAverageRadius);
+#endif
+
+  double step_area_3rd_law_multiplier = 0.0;
+
+  if (referenceRadius != 0)
+  {
+    step_area_3rd_law_multiplier = sqrt(pow(m_polarCoordAverageRadius/referenceRadius, 3.0));
+  }
+  else
+  {
+    throw new DivideByZeroException;
+  }
 
   m_sweepArea = numStepsReciprocalSeed;
  
-  m_sweepArea *= area_of_ellipse; // Normalize area-per-step-to-sweep,
+  m_sweepArea *= m_areaOfEllipse; // Normalize area-per-step-to-sweep,
                                  // so that number of sweep steps will be
                                  // the same for all ellipses.
  
@@ -129,16 +128,17 @@ void KeplerianEllipse::step()
     theta1 += INCREMENT_SAMPLE_ANGLE;
     radius1 = getDerivedRadiusFromTheta(theta1);
     step_area = findArea(radius0, radius1, theta1-theta0);
-#ifdef DEBUG
-    fprintf(stderr, "%f,%f\n", theta1, accruedArea);
-#endif
   }
 
   m_polarCoordRadius = radius1;
   m_polarCoordTheta  = theta1;
 
-  m_sweepCount++;
   m_accruedArea += step_area;
+  m_sweepCount++;
+
+#ifdef DEBUG
+  printf("%f,%f,%f\n", step_area, m_accruedArea, m_sweepArea*m_sweepCount);
+#endif
 
 }// step()
 
@@ -216,7 +216,29 @@ double KeplerianEllipse::findArea(double sideA, double sideB, double angleC)
   triangle_base = sqrt(pow(sideA, 2.0) + pow(sideB, 2.0) - 2*sideA*sideB*cos(angleC));
 
   // Law of sines used
-  triangle_angle_opposite_side_a = asin((sideA*sin(angleC))/triangle_base);
+  if ((sideA*sin(angleC))/triangle_base > 1.0 ||
+      (sideA*sin(angleC))/triangle_base < 1.0 ||
+      triangle_base == 0)
+  {
+    triangle_angle_opposite_side_a = PI/2.0;
+  }
+  else
+  {
+    triangle_angle_opposite_side_a = asin((sideA*sin(angleC))/triangle_base);
+  }
+
+  if (!(triangle_angle_opposite_side_a <= PI/2.0 &&
+        triangle_angle_opposite_side_a >= -PI/2.0))
+  {
+    char error_str[MAX_STR];
+
+    sprintf(error_str,
+            "sideA %20.10lf, sideB %20.10lf angleC %lf, triangle_base %lf, "
+            "triangle_angle_opposite_side_a %lf\n",
+            sideA, sideB, angleC, triangle_base, triangle_angle_opposite_side_a);
+
+    throw new GeneralException(error_str);
+  }
 
   if (triangle_angle_opposite_side_a < 0)
   {
@@ -227,6 +249,10 @@ double KeplerianEllipse::findArea(double sideA, double sideB, double angleC)
   triangle_height = fabs(sideB*sin(triangle_angle_opposite_side_a))/sin(PI/2.0);
 
   triangle_area = 0.5 * triangle_height * triangle_base;
+
+#ifdef DEBUG
+  printf("findArea:  %lf, %lf, %lf, %lf, %lf, %lf, %lf\n", sideA, sideB, angleC, triangle_base, triangle_angle_opposite_side_a, triangle_height, triangle_area);
+#endif
 
   return triangle_area;
 

@@ -25,10 +25,10 @@ class KeplerianEllipse
 
     KeplerianEllipse(const double semiMajorAxisLength, // "a" ... in meters
                      const double eccentricity,        // b=sqrt(a^2-c^2),c=e*a
-                     const double initialTheta = 0,    // in radians
+                     const double initialTheta = 0.0,  // in radians
                      const double numStepsReciprocalSeed = 1/365.256363004,
                        // one Earth day as fraction of one earth year is default
-                     const double referenceRadius = 149577845178.948517
+                     const double referenceRadius = 149587580813.169556
                        // average Earth orbital radius in meters
                     );
 
@@ -64,6 +64,7 @@ class KeplerianEllipse
     double m_polarCoordRadius;
     double m_sweepArea;
     double m_polarCoordAverageRadius;
+    double m_areaOfEllipse;
 
     int    m_sweepCount;
     double m_accruedArea;
