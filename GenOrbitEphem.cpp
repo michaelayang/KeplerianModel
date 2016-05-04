@@ -6,6 +6,8 @@
 
 main()
 {
+#if 1
+
   EarthKeplerianEllipse earth_propagator;
   MarsKeplerianEllipse  mars_propagator;
 
@@ -22,5 +24,20 @@ main()
     mars_propagator.step();
 
   }
+
+#else
+
+  KeplerianEllipse propagator(5, 3.0/5.0, 0, 1/20.0, 3);
+
+  while (propagator.getTheta() < 2*PI)
+  {
+    printf("%4.2f,%4.2f\n",
+           propagator.getX(), propagator.getY()
+          );
+
+    propagator.step();
+
+  }
+#endif
 
 }
