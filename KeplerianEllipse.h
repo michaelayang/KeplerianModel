@@ -51,7 +51,7 @@ class KeplerianEllipse
 
   private:
 
-    double getDerivedRadiusFromTheta(double theta);
+    double getDerivedRadiusFromTheta(double polarCoordTheta);
     double findArea(double sideA, double sideB, double angleC);
 
     double m_ellipseA;

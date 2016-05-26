@@ -105,10 +105,10 @@ KeplerianEllipse::~KeplerianEllipse()
 }// ~KeplerianEllipse
 
 
-void KeplerianEllipse::init(double theta)
+void KeplerianEllipse::init(double polarCoordTheta)
 {
-  m_polarCoordTheta  = theta;
-  m_polarCoordRadius = getDerivedRadiusFromTheta(theta);
+  m_polarCoordTheta  = polarCoordTheta;
+  m_polarCoordRadius = getDerivedRadiusFromTheta(polarCoordTheta);
   m_sweepCount       = 1;
   m_accruedArea      = 0.0;
 
