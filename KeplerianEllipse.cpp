@@ -85,14 +85,16 @@ KeplerianEllipse::KeplerianEllipse(const double semiMajorAxisLength,
   m_sweepArea *= m_areaOfEllipse; // Normalize area-per-step-to-sweep,
                                  // so that number of sweep steps will be
                                  // the same for all ellipses.
- 
+
+#if 0
   m_sweepArea /= step_area_3rd_law_multiplier; // Now de-normalize the area-per-
                                               // step-to-sweep, per Kepler's
                                               // 3rd law which states
                                               // that T^2 is linearly
-                                              // proportioal to r^3, where
+                                              // proportional to r^3, where
                                               // r is the average radius
                                               // of the ellipse.
+#endif
 
   m_sweepCount  = 1;
   m_accruedArea = 0.0;
@@ -123,12 +125,40 @@ void KeplerianEllipse::step()
   double theta0      = m_polarCoordTheta;
   double theta1      = m_polarCoordTheta;
 
+#if 0
+  //
+  // Add small triangular areas incrementally until we have
+  // a total area sufficient for one "step" area
+  //
+  while (m_accruedArea + step_area < m_sweepArea*m_sweepCount)
+  {
+    theta1 += INCREMENT_SAMPLE_ANGLE;
+    radius0 = getDerivedRadiusFromTheta(theta1-INCREMENT_SAMPLE_ANGLE);
+    radius1 = getDerivedRadiusFromTheta(theta1);
+    step_area += findArea(radius0, radius1, INCREMENT_SAMPLE_ANGLE);
+  }
+#else
+  //
+  // More analytic solution, derived per info in
+  // "Calculus With Analytic Geometry" by George F. Simmons
+  // Copyright 1985
+  // Section 16.3 "Polar Equations of Circles, Conics, and Spirals and
+  // section 16.5 "Areas in Polar Coordinates" and section 15.3 Ellipses
+  //
+  double p = (m_ellipseA/m_eccentricity) - (m_eccentricity*m_ellipseA);
+
+  // dA = 0.5*r^2*dTheta;
+  // dA = (0.5*dTheta*(m_eccentricity*p)^2)/(1.0-m_eccentricity*cos(theta))^2;
+
   while (m_accruedArea + step_area < m_sweepArea*m_sweepCount)
   {
     theta1 += INCREMENT_SAMPLE_ANGLE;
     radius1 = getDerivedRadiusFromTheta(theta1);
-    step_area = findArea(radius0, radius1, theta1-theta0);
+    double dTheta = INCREMENT_SAMPLE_ANGLE;
+    double dA = 0.5*dTheta*pow((m_eccentricity*p)/(1.0-m_eccentricity*cos(theta1)), 2.0);
+    step_area += dA;
   }
+#endif
 
   m_polarCoordRadius = radius1;
   m_polarCoordTheta  = theta1;
