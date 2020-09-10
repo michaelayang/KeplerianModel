@@ -139,7 +139,7 @@ void KeplerianEllipse::step()
   }
 #else
   //
-  // More analytic solution, derived per info in
+  // A better-estimated solution, derived per info in
   // "Calculus With Analytic Geometry" by George F. Simmons
   // Copyright 1985
   // Section 16.3 "Polar Equations of Circles, Conics, and Spirals and
