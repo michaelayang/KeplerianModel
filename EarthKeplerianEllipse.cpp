@@ -1,12 +1,12 @@
 #include "EarthKeplerianEllipse.h"
 
 EarthKeplerianEllipse::EarthKeplerianEllipse() :
-  KeplerianEllipse(149.598023e9, 0.0167086, 3.0*PI/2.0, 1/1314922.9068144)
+  KeplerianEllipse(149.598023e9, -1.16817, 0.0167086, 3.01685, 1.0/365.256363004)
     // semi-major axis distance in meters;
+    // angle of the semi-major axis itself
     // eccentricity is a unitless ratio
-    // Start Earth at the -90 degrees position, when it's about to "overtake"
-    // Mars.
-    // The numStepsReciprocalSeed specified here is 1/(the number of seconds
+    // starting angle radian
+    // The numStepsReciprocalSeed specified here is 1/(the number of days
     // in an Earth year)
 {
 }// EarthKeplerianEllipse constructor

@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
+#define ORBIT_DAYS 780
 
 main()
 {
@@ -11,7 +12,8 @@ main()
   EarthKeplerianEllipse earth_propagator;
   MarsKeplerianEllipse  mars_propagator;
 
-  while (mars_propagator.getTheta() < 2*PI)
+  int counter = 0;
+  while (counter < ORBIT_DAYS)
   {
     printf("%4.2f,%4.2f,%4.2f,%4.2f\t%4.2f,%4.2f,%4.2f,%4.2f\n",
            earth_propagator.getX(), earth_propagator.getY(),
@@ -23,11 +25,12 @@ main()
     earth_propagator.step();
     mars_propagator.step();
 
+    counter++;
   }
 
 #else
 
-  KeplerianEllipse propagator(5, 3.0/5.0, 0, 1/20.0, 3);
+  KeplerianEllipse propagator(5, 0.0, 3.0/5.0, 0, 1/20.0, 3);
 
   while (propagator.getTheta() < 2*PI)
   {

@@ -13,11 +13,13 @@
 
 
 KeplerianEllipse::KeplerianEllipse(const double semiMajorAxisLength,
+                                   const double semiMajorAxisAngle,
                                    const double eccentricity,
                                    const double initialTheta,
                                    const double numStepsReciprocalSeed,
                                    const double referenceRadius) :
   m_ellipseA(semiMajorAxisLength),
+  m_axisAngle(semiMajorAxisAngle),
   m_eccentricity(eccentricity),
   m_polarCoordTheta(initialTheta)
 {
@@ -145,7 +147,7 @@ void KeplerianEllipse::step()
   // Section 16.3 "Polar Equations of Circles, Conics, and Spirals and
   // section 16.5 "Areas in Polar Coordinates" and section 15.3 Ellipses
   //
-  double p = (m_ellipseA/m_eccentricity) - (m_eccentricity*m_ellipseA);
+  double p = m_eccentricity != 0.0 ? (m_ellipseA/m_eccentricity) - (m_eccentricity*m_ellipseA) : m_ellipseA;
 
   // dA = 0.5*r^2*dTheta;
   // dA = (0.5*dTheta*(m_eccentricity*p)^2)/(1.0-m_eccentricity*cos(theta))^2;
@@ -155,7 +157,7 @@ void KeplerianEllipse::step()
     theta1 += INCREMENT_SAMPLE_ANGLE;
     radius1 = getDerivedRadiusFromTheta(theta1);
     double dTheta = INCREMENT_SAMPLE_ANGLE;
-    double dA = 0.5*dTheta*pow((m_eccentricity*p)/(1.0-m_eccentricity*cos(theta1)), 2.0);
+    double dA = m_eccentricity != 0.0 ? 0.5*dTheta*pow((m_eccentricity*p)/(1.0-m_eccentricity*cos(theta1)), 2.0) : 0.5*m_ellipseA*m_ellipseA*dTheta;
     step_area += dA;
   }
 #endif
@@ -182,14 +184,14 @@ const double KeplerianEllipse::getAverageRadius()
 
 const double KeplerianEllipse::getX()
 {
-  return m_polarCoordRadius*cos(m_polarCoordTheta);
+  return m_polarCoordRadius*cos(m_polarCoordTheta+m_axisAngle);
 
 }// getX()
 
 
 const double KeplerianEllipse::getY()
 {
-  return m_polarCoordRadius*sin(m_polarCoordTheta);
+  return m_polarCoordRadius*sin(m_polarCoordTheta+m_axisAngle);
 
 }// getY()
 

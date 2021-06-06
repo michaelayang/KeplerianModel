@@ -24,6 +24,7 @@ class KeplerianEllipse
     //
 
     KeplerianEllipse(const double semiMajorAxisLength, // "a" ... in meters
+                     const double semiMajorAxisAngle,  // in radians
                      const double eccentricity,        // b=sqrt(a^2-c^2),c=e*a
                      const double initialTheta = 0.0,  // in radians
                      const double numStepsReciprocalSeed = 1/365.256363004,
@@ -59,6 +60,7 @@ class KeplerianEllipse
     double m_ellipseC;
     double m_eccentricity;
     double m_directrix;
+    double m_axisAngle;
 
     double m_polarCoordTheta;
     double m_polarCoordRadius;
